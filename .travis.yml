@@ -1,7 +1,9 @@
 language: node_js
-node_js: 14
+node_js: 11
 branches:
   only: master
+install:
+  - yarn
 script:
   - yarn build
   - yarn test
