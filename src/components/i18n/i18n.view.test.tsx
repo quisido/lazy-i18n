@@ -1,8 +1,8 @@
 import { RenderOptions, render } from '@testing-library/react';
+import { PropsWithChildren, ReactElement } from 'react';
 import TranslateFunctionContext from '../../contexts/translate-function';
 import I18n from '../../index';
 import TranslateFunctionType from '../../types/translate-function';
-import { PropsWithChildren, ReactElement } from 'react';
 
 const MOCK_TRANSLATE_FUNCTION = jest.fn();
 

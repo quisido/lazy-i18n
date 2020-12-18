@@ -1,14 +1,13 @@
-import Translations from '../../../types/translations';
-import mapEagerTranslationsEntryToTranslationsEntry from './map-eager-translations-entry-to-translations-entry';
+import mapEagerTranslationsEntryToTranslationsRecordEntry from './map-eager-translations-entry-to-translations-record-entry';
 
-const TEST_TRANSLATIONS: Translations = {
+const TEST_TRANSLATIONS: Record<string, string> = {
   Test: 'Test',
 };
 
-describe('mapEagerTranslationsEntryToTranslationsEntry', (): void => {
+describe('mapEagerTranslationsEntryToTranslationsRecordEntry', (): void => {
   it('should handle default exported translations', (): void => {
     expect(
-      mapEagerTranslationsEntryToTranslationsEntry([
+      mapEagerTranslationsEntryToTranslationsRecordEntry([
         'en_US',
         {
           default: TEST_TRANSLATIONS,
@@ -19,7 +18,7 @@ describe('mapEagerTranslationsEntryToTranslationsEntry', (): void => {
 
   it('should handle translations', (): void => {
     expect(
-      mapEagerTranslationsEntryToTranslationsEntry([
+      mapEagerTranslationsEntryToTranslationsRecordEntry([
         'en_US',
         TEST_TRANSLATIONS,
       ]),

@@ -2,7 +2,19 @@ import { ReactElement } from 'react';
 import Loading from '../../components/loading';
 import useTranslate from '../../hooks/use-translate';
 import TranslateFunction from '../../types/translate-function';
-import Props from './types/props';
+
+type Children =
+  | number
+  | string
+  | (number | string)[]
+  | ((translate: TranslateFunction) => ReactElement);
+
+// This should extend Record<string, number | string>, but TypeScript 4 does not
+//   support the concept where a property (children: Children) does not match
+//   its index signature.
+interface Props extends Record<string, Children | number | string> {
+  children: Children;
+}
 
 export default function I18n({ children, ...vars }: Props): ReactElement {
   const translate: TranslateFunction = useTranslate();

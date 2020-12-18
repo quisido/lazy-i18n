@@ -6,8 +6,12 @@ import { PropsWithChildren, ReactElement, useContext } from 'react';
 import TranslateFunctionContext from '../../contexts/translate-function';
 import { I18nProvider } from '../../index';
 import TranslateFunctionType from '../../types/translate-function';
+import Translations from '../../types/translations';
 
 const TEST_VALUE: TranslateFunctionType = (): string => 'test';
+const TEST_TRANSLATIONS: Record<string, Translations> = {
+  en_US: Object.create(null),
+};
 
 describe('Provider', (): void => {
   beforeEach((): void => {
@@ -32,7 +36,11 @@ describe('Provider', (): void => {
 
     render(<TestComponent />, {
       wrapper({ children }: PropsWithChildren<unknown>): ReactElement {
-        return <I18nProvider locale="en_US">{children}</I18nProvider>;
+        return (
+          <I18nProvider locale="en_US" translations={TEST_TRANSLATIONS}>
+            {children}
+          </I18nProvider>
+        );
       },
     });
 

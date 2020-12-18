@@ -1,13 +1,16 @@
 import { HookResult, act, renderHook } from '@testing-library/react-hooks';
-import TranslationsProp from '../../types/translations-prop';
 import useProvider, { State } from './provider.hook';
+
+type Locale = 'en_US' | 'es_ES';
 
 const MOCK_EN_US = jest.fn();
 const MOCK_ES_ES = jest.fn();
+const EN_US: Locale = 'en_US';
+const ES_ES: Locale = 'es_ES';
 
-const TEST_TRANSLATIONS_RECORD: Record<string, TranslationsProp> = {
-  en_US: MOCK_EN_US,
-  es_ES: MOCK_ES_ES,
+const TEST_TRANSLATIONS = {
+  [EN_US]: MOCK_EN_US,
+  [ES_ES]: MOCK_ES_ES,
 };
 
 const asyncImportEffect = async (result: HookResult<State>): Promise<void> => {
@@ -36,9 +39,10 @@ describe('useProvider', (): void => {
   it('should use an empty translations map when no translations exist for a locale', async (): Promise<void> => {
     const { result } = renderHook(useProvider, {
       initialProps: {
-        locale: 'en_US',
-        translationsRecord: {
-          es_ES: MOCK_ES_ES,
+        locale: EN_US,
+        translations: {
+          [EN_US]: undefined,
+          [ES_ES]: MOCK_ES_ES,
         },
       },
     });
@@ -50,9 +54,9 @@ describe('useProvider', (): void => {
   it('should handle eager-loaded translations', async (): Promise<void> => {
     const { result } = renderHook(useProvider, {
       initialProps: {
-        locale: 'es_ES',
-        translationsRecord: {
-          es_ES: {
+        locale: ES_ES,
+        translations: {
+          [ES_ES]: {
             Spanish: 'Espanol',
           },
         },
@@ -67,8 +71,8 @@ describe('useProvider', (): void => {
     it('should import new translations', async (): Promise<void> => {
       const { rerender, result } = renderHook(useProvider, {
         initialProps: {
-          locale: 'en_US',
-          translationsRecord: TEST_TRANSLATIONS_RECORD,
+          locale: EN_US as Locale,
+          translations: TEST_TRANSLATIONS,
         },
       });
       await asyncImportEffect(result);
@@ -77,8 +81,8 @@ describe('useProvider', (): void => {
       expect(MOCK_ES_ES).not.toHaveBeenCalled();
 
       rerender({
-        locale: 'es_ES',
-        translationsRecord: TEST_TRANSLATIONS_RECORD,
+        locale: ES_ES,
+        translations: TEST_TRANSLATIONS,
       });
       await asyncImportEffect(result);
 
@@ -89,21 +93,21 @@ describe('useProvider', (): void => {
     it('should not import translations that already exist', async (): Promise<void> => {
       const { rerender, result } = renderHook(useProvider, {
         initialProps: {
-          locale: 'en_US',
-          translationsRecord: TEST_TRANSLATIONS_RECORD,
+          locale: EN_US as Locale,
+          translations: TEST_TRANSLATIONS,
         },
       });
       await asyncImportEffect(result);
 
       rerender({
-        locale: 'es_ES',
-        translationsRecord: TEST_TRANSLATIONS_RECORD,
+        locale: ES_ES,
+        translations: TEST_TRANSLATIONS,
       });
       await asyncImportEffect(result);
 
       rerender({
-        locale: 'en_US',
-        translationsRecord: TEST_TRANSLATIONS_RECORD,
+        locale: EN_US,
+        translations: TEST_TRANSLATIONS,
       });
 
       expect(MOCK_EN_US).toHaveBeenCalledTimes(1);
@@ -114,9 +118,9 @@ describe('useProvider', (): void => {
     it('should do nothing if a fallback is not needed', async (): Promise<void> => {
       const { result } = renderHook(useProvider, {
         initialProps: {
-          fallbackLocale: 'en_US',
-          locale: 'es_ES',
-          translationsRecord: TEST_TRANSLATIONS_RECORD,
+          fallbackLocale: EN_US,
+          locale: ES_ES,
+          translations: TEST_TRANSLATIONS,
         },
       });
       await asyncImportEffect(result);
@@ -131,8 +135,8 @@ describe('useProvider', (): void => {
     it('should do nothing if there is no fallback locale', async (): Promise<void> => {
       const { result } = renderHook(useProvider, {
         initialProps: {
-          locale: 'es_ES',
-          translationsRecord: TEST_TRANSLATIONS_RECORD,
+          locale: ES_ES,
+          translations: TEST_TRANSLATIONS,
         },
       });
       await asyncImportEffect(result);
@@ -147,17 +151,17 @@ describe('useProvider', (): void => {
     it('should do nothing if the fallback already loaded', async (): Promise<void> => {
       const { rerender, result } = renderHook(useProvider, {
         initialProps: {
-          fallbackLocale: 'en_US',
-          locale: 'en_US',
-          translationsRecord: TEST_TRANSLATIONS_RECORD,
+          fallbackLocale: EN_US,
+          locale: EN_US as Locale,
+          translations: TEST_TRANSLATIONS,
         },
       });
       await asyncImportEffect(result);
 
       rerender({
-        fallbackLocale: 'en_US',
-        locale: 'es_ES',
-        translationsRecord: TEST_TRANSLATIONS_RECORD,
+        fallbackLocale: EN_US,
+        locale: ES_ES,
+        translations: TEST_TRANSLATIONS,
       });
       await asyncImportEffect(result);
 
@@ -171,9 +175,9 @@ describe('useProvider', (): void => {
     it('should import the fallback locale when needed', async (): Promise<void> => {
       const { result } = renderHook(useProvider, {
         initialProps: {
-          fallbackLocale: 'en_US',
-          locale: 'es_ES',
-          translationsRecord: TEST_TRANSLATIONS_RECORD,
+          fallbackLocale: EN_US,
+          locale: ES_ES,
+          translations: TEST_TRANSLATIONS,
         },
       });
       await asyncImportEffect(result);
@@ -191,9 +195,9 @@ describe('useProvider', (): void => {
     it('should return null if the language has not loaded yet', async (): Promise<void> => {
       const { result } = renderHook(useProvider, {
         initialProps: {
-          fallbackLocale: 'en_US',
-          locale: 'es_ES',
-          translationsRecord: TEST_TRANSLATIONS_RECORD,
+          fallbackLocale: EN_US,
+          locale: ES_ES,
+          translations: TEST_TRANSLATIONS,
         },
       });
 
@@ -205,9 +209,9 @@ describe('useProvider', (): void => {
     it('should return translations if they exist', async (): Promise<void> => {
       const { result } = renderHook(useProvider, {
         initialProps: {
-          fallbackLocale: 'en_US',
-          locale: 'es_ES',
-          translationsRecord: TEST_TRANSLATIONS_RECORD,
+          fallbackLocale: EN_US,
+          locale: ES_ES,
+          translations: TEST_TRANSLATIONS,
         },
       });
       await asyncImportEffect(result);
@@ -218,9 +222,9 @@ describe('useProvider', (): void => {
     it('should import the fallback if needed', async (): Promise<void> => {
       const { result } = renderHook(useProvider, {
         initialProps: {
-          fallbackLocale: 'en_US',
-          locale: 'es_ES',
-          translationsRecord: TEST_TRANSLATIONS_RECORD,
+          fallbackLocale: EN_US,
+          locale: ES_ES,
+          translations: TEST_TRANSLATIONS,
         },
       });
       await asyncImportEffect(result);
@@ -236,9 +240,9 @@ describe('useProvider', (): void => {
     it('should return the fallback translation if present', async (): Promise<void> => {
       const { result } = renderHook(useProvider, {
         initialProps: {
-          fallbackLocale: 'es_ES',
-          locale: 'en_US',
-          translationsRecord: TEST_TRANSLATIONS_RECORD,
+          fallbackLocale: ES_ES,
+          locale: EN_US,
+          translations: TEST_TRANSLATIONS,
         },
       });
       await asyncImportEffect(result);
@@ -254,8 +258,8 @@ describe('useProvider', (): void => {
     it('should return the untranslated string if not present', async (): Promise<void> => {
       const { result } = renderHook(useProvider, {
         initialProps: {
-          locale: 'es_ES',
-          translationsRecord: TEST_TRANSLATIONS_RECORD,
+          locale: ES_ES,
+          translations: TEST_TRANSLATIONS,
         },
       });
       await asyncImportEffect(result);

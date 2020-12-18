@@ -1,9 +1,12 @@
+import DefaultExport from '../../../types/default-export';
 import Translations from '../../../types/translations';
-import TranslationsProp from '../../../types/translations-prop';
 
 export default function isEagerTranslationsEntry(
-  entry: [string, TranslationsProp | undefined],
-): entry is [string, Translations] {
+  entry: [string, Translations | undefined],
+): entry is [
+  string,
+  DefaultExport<Record<string, string>> | Record<string, string>,
+] {
   const [, translationsProp] = entry;
   return typeof translationsProp === 'object';
 }

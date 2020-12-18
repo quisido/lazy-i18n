@@ -5,81 +5,78 @@ import {
   useRef,
   useState,
 } from 'react';
-import DefaultExportedTranslations from '../../types/default-exported-translations';
+import DefaultExport from '../../types/default-export';
 import TranslateFunction from '../../types/translate-function';
 import Translations from '../../types/translations';
-import TranslationsProp from '../../types/translations-prop';
 import replaceVariables from '../../utils/replace-variables';
 import isEagerTranslationsEntry from './utils/is-eager-translations-entry';
-import mapEagerTranslationsEntryToTranslationsEntry from './utils/map-eager-translations-entry-to-translations-entry';
-import mapEagerTranslationsToTranslations from './utils/map-eager-translations-to-translations';
+import mapEagerTranslationsEntryToTranslationsRecordEntry from './utils/map-eager-translations-entry-to-translations-record-entry';
+import mapEagerTranslationsToTranslationsRecord from './utils/map-eager-translations-to-translations-record';
 
 type ImportTranslations = () =>
-  | DefaultExportedTranslations
-  | Promise<DefaultExportedTranslations | Translations>
-  | Translations;
+  | DefaultExport<Record<string, string>>
+  | Promise<DefaultExport<Record<string, string>> | Record<string, string>>
+  | Record<string, string>;
 
-interface Props {
-  fallbackLocale?: string;
-  locale: string;
-  translationsRecord: Record<string, TranslationsProp | undefined>;
+interface Props<T extends Record<string, Translations | undefined>> {
+  fallbackLocale?: keyof T;
+  locale: keyof T;
+  translations: T;
 }
 
 export interface State {
   asyncImportEffect: MutableRefObject<
-    | DefaultExportedTranslations
+    | DefaultExport<Record<string, string>>
     | null
-    | Promise<DefaultExportedTranslations | Translations>
-    | Translations
+    | Promise<DefaultExport<Record<string, string>> | Record<string, string>>
+    | Record<string, string>
   >;
   value: TranslateFunction;
 }
 
-export default function useProvider({
-  fallbackLocale,
-  locale,
-  translationsRecord,
-}: Props): State {
+export default function useProvider<
+  T extends Record<string, Translations | undefined>
+>({ fallbackLocale, locale, translations }: Props<T>): State {
   const asyncImportEffect: MutableRefObject<
-    | DefaultExportedTranslations
+    | DefaultExport<Record<string, string>>
     | null
-    | Promise<DefaultExportedTranslations | Translations>
-    | Translations
+    | Promise<DefaultExport<Record<string, string>> | Record<string, string>>
+    | Record<string, string>
   > = useRef(null);
 
   const [isFallbackNeeded, setIsFallbackNeeded] = useState(false);
   const [translationsMap, setTranslationsMap] = useState(
-    (): Map<string, Translations> => {
-      const translationsPropEntries: [
-        string,
-        TranslationsProp | undefined,
-      ][] = Object.entries(translationsRecord);
-
+    (): Map<keyof T, Record<string, string>> => {
       const translationsEntries: [
         string,
-        Translations,
-      ][] = translationsPropEntries
-        .filter(isEagerTranslationsEntry)
-        .map(mapEagerTranslationsEntryToTranslationsEntry);
+        Translations | undefined,
+      ][] = Object.entries(translations);
 
-      return new Map(translationsEntries);
+      const eagerTranslationsRecordEntries: [
+        string,
+        Record<string, string>,
+      ][] = translationsEntries
+        .filter(isEagerTranslationsEntry)
+        .map(mapEagerTranslationsEntryToTranslationsRecordEntry);
+
+      return new Map(eagerTranslationsRecordEntries);
     },
   );
 
   const importTranslations = useCallback(
-    async (locale: string): Promise<void> => {
-      const importTranslations: TranslationsProp | undefined =
-        translationsRecord[locale];
+    async (locale: keyof T): Promise<void> => {
+      const importTranslations: Translations | undefined = translations[locale];
 
       // If there are no translations for this language, set an empty map.
       if (!importTranslations) {
         setTranslationsMap(
           (
-            oldTranslationsMap: Map<string, Translations>,
-          ): Map<string, Translations> => {
-            const newTranslationsMap: Map<string, Translations> = new Map(
-              oldTranslationsMap,
-            );
+            oldTranslationsMap: Map<keyof T, Record<string, string>>,
+          ): Map<keyof T, Record<string, string>> => {
+            const newTranslationsMap: Map<
+              keyof T,
+              Record<string, string>
+            > = new Map(oldTranslationsMap);
             newTranslationsMap.set(locale, Object.create(null));
             return newTranslationsMap;
           },
@@ -92,7 +89,10 @@ export default function useProvider({
       // "as ImportTranslations" because this code cannot execute when
       //   translationsRecord[locale] is eager-loaded.
       asyncImportEffect.current = (importTranslations as ImportTranslations)();
-      const translations: Translations = mapEagerTranslationsToTranslations(
+      const translationsRecord: Record<
+        string,
+        string
+      > = mapEagerTranslationsToTranslationsRecord(
         await asyncImportEffect.current,
       );
 
@@ -104,17 +104,18 @@ export default function useProvider({
 
       setTranslationsMap(
         (
-          oldTranslationsMap: Map<string, Translations>,
-        ): Map<string, Translations> => {
-          const newTranslationsMap: Map<string, Translations> = new Map(
-            oldTranslationsMap,
-          );
-          newTranslationsMap.set(locale, translations);
+          oldTranslationsMap: Map<keyof T, Record<string, string>>,
+        ): Map<keyof T, Record<string, string>> => {
+          const newTranslationsMap: Map<
+            keyof T,
+            Record<string, string>
+          > = new Map(oldTranslationsMap);
+          newTranslationsMap.set(locale, translationsRecord);
           return newTranslationsMap;
         },
       );
     },
-    [translationsRecord],
+    [translations],
   );
 
   // The translate function is a stateful function that takes a string and
@@ -122,9 +123,9 @@ export default function useProvider({
   // For example, if the locale is 'es', then `translate('cat') === 'gato'`.
   const value: TranslateFunction = useCallback(
     (str: string, vars?: Record<string, number | string>): null | string => {
-      const translations: Translations | undefined = translationsMap.get(
-        locale,
-      );
+      const translations:
+        | Record<string, string>
+        | undefined = translationsMap.get(locale);
 
       // If this language's translations have not yet loaded, return null.
       if (!translations) {
@@ -140,7 +141,7 @@ export default function useProvider({
       //   locale if provided.
       if (fallbackLocale) {
         const fallbackTranslations:
-          | Translations
+          | Record<string, string>
           | undefined = translationsMap.get(fallbackLocale);
 
         // If the fallback language's translations have not yet loaded, return

@@ -1,24 +1,27 @@
-import { ReactElement, memo } from 'react';
+import { ReactElement, ReactNode, memo } from 'react';
 import TranslateFunctionContext from '../../contexts/translate-function';
-import TranslationsProp from '../../types/translations-prop';
+import Translations from '../../types/translations';
 import * as useProviderHook from './provider.hook';
-import Props from './types/props';
 
 const { default: useProvider } = useProviderHook;
 
-function I18nProvider({
+interface Props<T extends Record<string, Translations | undefined>> {
+  children?: ReactNode;
+  fallbackLocale?: keyof T;
+  locale: keyof T;
+  translations: T;
+}
+
+function I18nProvider<T extends Record<string, Translations | undefined>>({
   children,
   fallbackLocale,
   locale,
-  ...translationsRecord
-}: Props): ReactElement {
+  translations,
+}: Props<T>): ReactElement {
   const { value } = useProvider({
     fallbackLocale,
     locale,
-    translationsRecord: translationsRecord as Record<
-      string,
-      TranslationsProp | undefined
-    >,
+    translations,
   });
 
   return (

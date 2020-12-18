@@ -1,6 +1,5 @@
-import DefaultExportedTranslations from '../types/default-exported-translations';
-import Translations from '../types/translations';
+import DefaultExport from '../types/default-export';
 
 export default interface DynamicImportedTranslations {
-  (): Promise<DefaultExportedTranslations | Translations>;
+  (): Promise<DefaultExport<Record<string, string>> | Record<string, string>>;
 }

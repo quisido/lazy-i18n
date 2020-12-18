@@ -1,21 +1,21 @@
 import Translations from '../../../types/translations';
-import mapEagerTranslationsToTranslations from './map-eager-translations-to-translations';
+import mapEagerTranslationsToTranslationsRecord from './map-eager-translations-to-translations-record';
 
 const TEST_TRANSLATIONS: Translations = {
   Test: 'Test',
 };
 
-describe('mapEagerTranslationsToTranslations', (): void => {
+describe('mapEagerTranslationsToTranslationsRecord', (): void => {
   it('should handle default exported translations', (): void => {
     expect(
-      mapEagerTranslationsToTranslations({
+      mapEagerTranslationsToTranslationsRecord({
         default: TEST_TRANSLATIONS,
       }),
     ).toBe(TEST_TRANSLATIONS);
   });
 
   it('should handle translations', (): void => {
-    expect(mapEagerTranslationsToTranslations(TEST_TRANSLATIONS)).toBe(
+    expect(mapEagerTranslationsToTranslationsRecord(TEST_TRANSLATIONS)).toBe(
       TEST_TRANSLATIONS,
     );
   });

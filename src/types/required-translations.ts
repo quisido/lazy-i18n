@@ -1,5 +1,6 @@
-import DefaultExportedTranslations from '../types/default-exported-translations';
-import Translations from '../types/translations';
+import DefaultExport from '../types/default-export';
 
-type RequiredTranslations = () => DefaultExportedTranslations | Translations;
+type RequiredTranslations = () =>
+  | DefaultExport<Record<string, string>>
+  | Record<string, string>;
 export default RequiredTranslations;
