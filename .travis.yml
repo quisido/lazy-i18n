@@ -3,6 +3,7 @@ node_js: 11
 branches:
   only: master
 install:
+  - rm -rf ./.yarn
   - yarn
 script:
   - yarn build
