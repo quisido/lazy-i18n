@@ -1,0 +1,24 @@
+@keyframes loading-dot {
+  0% {
+    top: 0;
+  }
+
+  25% {
+    top: -0.125em;
+  }
+
+  50% {
+    top: 0;
+  }
+
+  100% {
+    top: 0;
+  }
+}
+
+.root {
+  animation-duration: 1s;
+  animation-name: loading-dot;
+  animation-timing-function: ease-in-out;
+  position: relative;
+}

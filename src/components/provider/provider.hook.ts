@@ -1,194 +1,132 @@
 import {
   MutableRefObject,
   useCallback,
-  useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
-import DefaultExport from '../../types/default-export';
+import mapTranslationsRecordToLoadedTranslationsRecord from '../../map/map-translations-record-to-loaded-translations-record';
+import RunnableTranslateFunction from '../../runnables/runnable-translate-function';
 import TranslateFunction from '../../types/translate-function';
 import Translations from '../../types/translations';
-import replaceVariables from '../../utils/replace-variables';
-import isEagerTranslationsEntry from './utils/is-eager-translations-entry';
-import mapEagerTranslationsEntryToTranslationsRecordEntry from './utils/map-eager-translations-entry-to-translations-record-entry';
-import mapEagerTranslationsToTranslationsRecord from './utils/map-eager-translations-to-translations-record';
+import handleNotFound from '../../utils/handle-not-found';
+import useLoadTranslations from './hooks/use-load-translations';
 
-type ImportTranslations = () =>
-  | DefaultExport<Record<string, string>>
-  | Promise<DefaultExport<Record<string, string>> | Record<string, string>>
-  | Record<string, string>;
+type LoadedTranslationsRecord<K extends number | string | symbol> = Record<
+  K,
+  Record<string, string> | undefined
+>;
 
 interface Props<T extends Record<string, Translations | undefined>> {
   fallbackLocale?: keyof T;
   locale: keyof T;
-  translations: T;
+  onLoadError?(locale: keyof T, err: unknown): void;
+  translationsRecord: T;
 }
 
 export interface State {
-  asyncImportEffect: MutableRefObject<
-    | DefaultExport<Record<string, string>>
-    | null
-    | Promise<DefaultExport<Record<string, string>> | Record<string, string>>
-    | Record<string, string>
+  translate: TranslateFunction;
+  asyncLoadTranslationsEffect: MutableRefObject<Promise<unknown> | undefined>;
+  asyncLoadFallbackTranslationsEffect: MutableRefObject<
+    Promise<unknown> | undefined
   >;
-  value: TranslateFunction;
 }
 
 export default function useProvider<
   T extends Record<string, Translations | undefined>
->({ fallbackLocale, locale, translations }: Props<T>): State {
-  const asyncImportEffect: MutableRefObject<
-    | DefaultExport<Record<string, string>>
-    | null
-    | Promise<DefaultExport<Record<string, string>> | Record<string, string>>
-    | Record<string, string>
-  > = useRef(null);
+>({
+  fallbackLocale,
+  locale,
+  onLoadError,
+  translationsRecord,
+}: Props<T>): State {
+  if (typeof translationsRecord[locale] === 'undefined') {
+    throw new Error(`Translations do not exist for locale: ${locale}`);
+  }
 
-  const [isFallbackNeeded, setIsFallbackNeeded] = useState(false);
-  const [translationsMap, setTranslationsMap] = useState(
-    (): Map<keyof T, Record<string, string>> => {
-      const translationsEntries: [
-        string,
-        Translations | undefined,
-      ][] = Object.entries(translations);
+  if (
+    typeof fallbackLocale === 'string' &&
+    typeof translationsRecord[fallbackLocale] === 'undefined'
+  ) {
+    throw new Error(
+      `Translations do not exist for fallback locale: ${fallbackLocale}`,
+    );
+  }
 
-      const eagerTranslationsRecordEntries: [
-        string,
-        Record<string, string>,
-      ][] = translationsEntries
-        .filter(isEagerTranslationsEntry)
-        .map(mapEagerTranslationsEntryToTranslationsRecordEntry);
+  const asyncLoadFallbackTranslationsEffect: MutableRefObject<
+    Promise<unknown> | undefined
+  > = useRef();
 
-      return new Map(eagerTranslationsRecordEntries);
-    },
+  const asyncLoadTranslationsEffect: MutableRefObject<
+    Promise<unknown> | undefined
+  > = useRef();
+
+  const [loadedTranslationsRecord, setLoadedTranslationsRecord] = useState(
+    (): LoadedTranslationsRecord<keyof T> =>
+      mapTranslationsRecordToLoadedTranslationsRecord(translationsRecord),
   );
 
-  const importTranslations = useCallback(
-    async (locale: keyof T): Promise<void> => {
-      const importTranslations: Translations | undefined = translations[locale];
-
-      // If there are no translations for this language, set an empty map.
-      if (!importTranslations) {
-        setTranslationsMap(
+  const loadTranslations = useLoadTranslations({
+    onLoadError,
+    translationsRecord,
+    onLoad: useCallback(
+      (newLocale: keyof T, newTranslations: Record<string, string>): void => {
+        setLoadedTranslationsRecord(
           (
-            oldTranslationsMap: Map<keyof T, Record<string, string>>,
-          ): Map<keyof T, Record<string, string>> => {
-            const newTranslationsMap: Map<
-              keyof T,
-              Record<string, string>
-            > = new Map(oldTranslationsMap);
-            newTranslationsMap.set(locale, Object.create(null));
-            return newTranslationsMap;
-          },
+            oldLoadedTranslationsRecord: LoadedTranslationsRecord<keyof T>,
+          ): LoadedTranslationsRecord<keyof T> => ({
+            ...oldLoadedTranslationsRecord,
+            [newLocale]: newTranslations,
+          }),
         );
-        return;
+      },
+      [],
+    ),
+  });
+
+  const handleLoadFallbackTranslations = useCallback(
+    (str: string): void => {
+      if (typeof fallbackLocale === 'undefined') {
+        throw new Error(`Translation not found: ${str}`);
       }
-
-      // Lazy load the translations for this locale, then update the local
-      //   state's translations map.
-      // "as ImportTranslations" because this code cannot execute when
-      //   translationsRecord[locale] is eager-loaded.
-      asyncImportEffect.current = (importTranslations as ImportTranslations)();
-      const translationsRecord: Record<
-        string,
-        string
-      > = mapEagerTranslationsToTranslationsRecord(
-        await asyncImportEffect.current,
+      asyncLoadFallbackTranslationsEffect.current = loadTranslations(
+        fallbackLocale,
       );
+    },
+    [fallbackLocale, loadTranslations],
+  );
 
-      // If two lazy loads dispatched simultaneously, only process the
-      //   first one.
-      // if (translationsMap.has(locale)) {
-      //   return;
-      // }
+  const handleLoadTranslations = useCallback((): void => {
+    asyncLoadTranslationsEffect.current = loadTranslations(locale);
+  }, [loadTranslations, locale]);
 
-      setTranslationsMap(
-        (
-          oldTranslationsMap: Map<keyof T, Record<string, string>>,
-        ): Map<keyof T, Record<string, string>> => {
-          const newTranslationsMap: Map<
-            keyof T,
-            Record<string, string>
-          > = new Map(oldTranslationsMap);
-          newTranslationsMap.set(locale, translationsRecord);
-          return newTranslationsMap;
+  const loadedFallbackTranslations: Record<string, string> | undefined =
+    fallbackLocale && loadedTranslationsRecord[fallbackLocale];
+  const loadedTranslations: Record<string, string> | undefined =
+    loadedTranslationsRecord[locale];
+  return {
+    asyncLoadFallbackTranslationsEffect,
+    asyncLoadTranslationsEffect,
+
+    translate: useMemo((): TranslateFunction => {
+      const newTranslate: RunnableTranslateFunction = new RunnableTranslateFunction(
+        {
+          fallbackTranslations: loadedFallbackTranslations,
+          translations: loadedTranslations,
         },
       );
-    },
-    [translations],
-  );
-
-  // The translate function is a stateful function that takes a string and
-  //   returns a translation based on the current locale.
-  // For example, if the locale is 'es', then `translate('cat') === 'gato'`.
-  const value: TranslateFunction = useCallback(
-    (str: string, vars?: Record<string, number | string>): null | string => {
-      const translations:
-        | Record<string, string>
-        | undefined = translationsMap.get(locale);
-
-      // If this language's translations have not yet loaded, return null.
-      if (!translations) {
-        return null;
-      }
-
-      // If the translation for this string exists, return it.
-      if (Object.prototype.hasOwnProperty.call(translations, str)) {
-        return replaceVariables(translations[str], vars);
-      }
-
-      // If the translation for this string does not exist, use the fallback
-      //   locale if provided.
-      if (fallbackLocale) {
-        const fallbackTranslations:
-          | Record<string, string>
-          | undefined = translationsMap.get(fallbackLocale);
-
-        // If the fallback language's translations have not yet loaded, return
-        //   null.
-        if (!fallbackTranslations) {
-          setIsFallbackNeeded(true);
-          return null;
-        }
-
-        // If the fallback translation for this string exists, return it.
-        if (Object.prototype.hasOwnProperty.call(fallbackTranslations, str)) {
-          return replaceVariables(fallbackTranslations[str], vars);
-        }
-      }
-
-      // If the translation for this string does not exist in the target
-      //   nor fallback language, just display the string itself.
-      return str;
-    },
-    [fallbackLocale, locale, translationsMap],
-  );
-
-  // If translations for this locale have not loaded, load them.
-  useEffect((): void => {
-    if (translationsMap.has(locale)) {
-      return;
-    }
-    importTranslations(locale);
-  }, [importTranslations, locale, translationsMap]);
-
-  // If fallback translations for this locale have not loaded and need to, load
-  //   them.
-  useEffect((): void => {
-    if (!fallbackLocale) {
-      return;
-    }
-    if (!isFallbackNeeded) {
-      return;
-    }
-    if (translationsMap.has(fallbackLocale)) {
-      return;
-    }
-    importTranslations(fallbackLocale);
-  }, [fallbackLocale, importTranslations, isFallbackNeeded, translationsMap]);
-
-  return {
-    asyncImportEffect,
-    value,
+      newTranslate.on(
+        'loadFallbackTranslations',
+        handleLoadFallbackTranslations,
+      );
+      newTranslate.on('loadTranslations', handleLoadTranslations);
+      newTranslate.on('notFound', handleNotFound);
+      return newTranslate.run;
+    }, [
+      handleLoadFallbackTranslations,
+      handleLoadTranslations,
+      loadedFallbackTranslations,
+      loadedTranslations,
+    ]),
   };
 }

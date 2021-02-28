@@ -1,41 +1,45 @@
-import {
-  ComponentType,
-  PropsWithChildren,
-  ReactElement,
-  ReactNode,
-  memo,
-} from 'react';
+import { ComponentType, ReactElement, ReactNode, memo } from 'react';
+import Loading from '../../components/loading';
+import LoadingComponentContext from '../../contexts/loading-component';
+import LoadingStringContext from '../../contexts/loading-string';
 import TranslateFunctionContext from '../../contexts/translate-function';
 import Translations from '../../types/translations';
-import * as useProviderHook from './provider.hook';
-
-const { default: useProvider } = useProviderHook;
+import useProvider from './provider.hook';
 
 interface Props<T extends Record<string, Translations | undefined>> {
+  LoadingComponent?: ComponentType<unknown>;
   children?: ReactNode;
-  fallbackComponent?: ComponentType<PropsWithChildren<unknown>>;
+  onLoadError?(locale: keyof T, err: unknown): void;
   fallbackLocale?: keyof T;
-  fallbackString?: string;
+  loadingString?: string;
   locale: keyof T;
   translations: T;
 }
 
 function I18nProvider<T extends Record<string, Translations | undefined>>({
+  LoadingComponent,
   children,
+  onLoadError,
   fallbackLocale,
+  loadingString,
   locale,
-  translations,
+  translations: translationsRecord,
 }: Props<T>): ReactElement {
-  const { value } = useProvider({
+  const { translate } = useProvider({
     fallbackLocale,
     locale,
-    translations,
+    onLoadError,
+    translationsRecord,
   });
 
   return (
-    <TranslateFunctionContext.Provider value={value}>
-      {children}
-    </TranslateFunctionContext.Provider>
+    <LoadingComponentContext.Provider value={LoadingComponent || Loading}>
+      <LoadingStringContext.Provider value={loadingString || '...'}>
+        <TranslateFunctionContext.Provider value={translate}>
+          {children}
+        </TranslateFunctionContext.Provider>
+      </LoadingStringContext.Provider>
+    </LoadingComponentContext.Provider>
   );
 }
 

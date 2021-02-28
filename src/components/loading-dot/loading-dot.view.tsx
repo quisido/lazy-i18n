@@ -1,32 +1,26 @@
-import { CSSProperties, ReactElement, useMemo } from 'react';
+import { CSSProperties, ReactElement } from 'react';
+import styles from './loading-dot.module.scss';
 
 interface Props {
-  animating: boolean;
+  index: 0 | 1 | 2;
 }
 
-const DEFAULT_STYLE: CSSProperties = {
-  position: 'relative',
-  transitionDelay: `0s`,
-  transitionDuration: '0.125s',
-  transitionProperty: 'top',
-  transitionTimingFunction: 'ease-in-out',
-};
+const STYLES: [CSSProperties, CSSProperties, CSSProperties] = [
+  {
+    animationDelay: '0',
+  },
+  {
+    animationDelay: '0.125s',
+  },
+  {
+    animationDelay: '0.25s',
+  },
+];
 
-const mapAnimatingToTop = (animating: boolean): number | string => {
-  if (animating) {
-    return '-0.125em';
-  }
-  return 0;
-};
-
-export default function I18nLoadingDot({ animating }: Props): ReactElement {
-  const style: CSSProperties = useMemo(
-    (): CSSProperties => ({
-      ...DEFAULT_STYLE,
-      top: mapAnimatingToTop(animating),
-    }),
-    [animating],
+export default function I18nLoadingDot({ index }: Props): ReactElement {
+  return (
+    <span className={styles.root} style={STYLES[index]}>
+      .
+    </span>
   );
-
-  return <span style={style}>.</span>;
 }

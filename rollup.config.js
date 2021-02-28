@@ -1,6 +1,7 @@
 import commonjs from '@rollup/plugin-commonjs';
 import nodeResolve from '@rollup/plugin-node-resolve';
 import path from 'path';
+import postcss from 'rollup-plugin-postcss';
 import typescript2 from 'rollup-plugin-typescript2';
 import packageJson from './package.json';
 
@@ -45,6 +46,12 @@ export default [
       },
     ],
     plugins: [
+      postcss({
+        autoModules: true,
+        extract: false,
+        minimize: !IS_DEV,
+        use: ['sass'],
+      }),
       nodeResolve({
         extensions: ['.js', '.jsx', '.ts', '.tsx'],
         preferBuiltins: true,

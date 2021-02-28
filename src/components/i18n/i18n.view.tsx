@@ -1,46 +1,29 @@
-import { ReactElement } from 'react';
-import Loading from '../../components/loading';
+import { ComponentType, ReactElement, ReactNode, useContext } from 'react';
+import loadingComponentContext from '../../contexts/loading-component';
 import useTranslate from '../../hooks/use-translate';
+import ReactNodeTranslationValue from '../../types/react-node-translation-value';
 import TranslateFunction from '../../types/translate-function';
+import mapChildrenToTranslationKey from './utils/map-children-to-translation-key';
 
-type Children =
-  | number
-  | string
-  | (number | string)[]
-  | ((translate: TranslateFunction) => ReactElement);
-
-// This should extend Record<string, number | string>, but TypeScript 4 does not
-//   support the concept where a property (children: Children) does not match
-//   its index signature.
-interface Props extends Record<string, Children | number | string> {
-  children: Children;
+interface Props extends Record<string, ReactNodeTranslationValue> {
+  children: number | string | (number | string)[];
 }
 
 export default function I18n({ children, ...vars }: Props): ReactElement {
+  const LoadingComponent: ComponentType<unknown> = useContext(
+    loadingComponentContext,
+  );
   const translate: TranslateFunction = useTranslate();
 
-  if (typeof children === 'function') {
-    return children(translate);
-  }
-
-  const translationKey: string = Array.isArray(children)
-    ? children.join('')
-    : children.toString();
-
-  const translation: null | string = translate(
-    translationKey,
-    vars as Record<string, string | number>,
+  const translation: ReactNode | string | undefined = translate(
+    mapChildrenToTranslationKey(children),
+    vars,
   );
 
   // If this locale's translations have not yet loaded, display the loading
   //   status indicator.
-  if (translation === null) {
-    return <Loading />;
-  }
-
-  // If this locale's translations are missing, display the translation key.
-  if (typeof translation !== 'string') {
-    return <>{translationKey}</>;
+  if (typeof translation === 'undefined') {
+    return <LoadingComponent />;
   }
 
   // If this locale's translations have loaded and are present, display the
