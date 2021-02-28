@@ -1,4 +1,4 @@
-import { HookResult, act, renderHook } from '@testing-library/react-hooks';
+import { RenderResult, act, renderHook } from '@testing-library/react-hooks';
 import useProvider, { State } from './provider.hook';
 
 type Locale = 'en_US' | 'es_ES';
@@ -13,7 +13,9 @@ const TEST_TRANSLATIONS = {
   [ES_ES]: MOCK_ES_ES,
 };
 
-const asyncImportEffect = async (result: HookResult<State>): Promise<void> => {
+const asyncImportEffect = async (
+  result: RenderResult<State>,
+): Promise<void> => {
   await act(
     async (): Promise<void> => {
       await result.current.asyncImportEffect.current;
