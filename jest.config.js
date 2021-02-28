@@ -16,6 +16,9 @@ export default {
       statements: 100,
     },
   },
+  moduleNameMapper: {
+    '\\.module.scss$': '<rootDir>/src/test-utils/module-scss.ts',
+  },
   resetMocks: true,
   resetModules: true,
   restoreMocks: true,
