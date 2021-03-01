@@ -48,6 +48,7 @@ variable's value.
 ```javascript
 import I18n from 'lazy-i18n';
 
+// Hello world!
 function Main() {
   return <I18n user="world">Hello $user!</I18n>;
 }
@@ -63,15 +64,18 @@ import { useTranslate } from 'lazy-i18n';
 
 function Picture() {
   const translate = useTranslate();
+
+  // Hello world!
   const alt = translate('Hello $user!', {
     user: 'world',
   });
+
   return <img alt={alt} src="hello.jpg" />;
 }
 ```
 
 When a lazy-loaded translation has not yet loaded, the `useTranslate` hook's
-function will return `null`. You can use this to render placeholder text.
+function will return `undefined`. You can use this to render placeholder text.
 
 ```javascript
 import { useTranslate } from 'lazy-i18n';
@@ -112,7 +116,7 @@ function MyString() {
 The `I18nProvider` component provides a React context allowing the `I18n`
 components and `useTranslate` hooks to access the translations.
 
-The `I18nProvider` component accepts three props:
+The `I18nProvider` component accepts the following props:
 
 #### `fallbackLocale`
 
@@ -156,6 +160,22 @@ function Spanish() {
 In the above example, since the string "Spanish" does not exist in the `en`
 locale, the `es` fallback locale will be used. `<Spanish />` displays "Espanol"
 to the user.
+
+#### `LoadingComponent`
+
+Type: `ComponentType` _optional_
+
+The `LoadingComponent` prop specifies a component to render when using the
+`<I18n>` component while the translations are still loading.
+
+By default, this component is three animating dots.
+
+#### `loadingString`
+
+Type: `string` _optional_
+
+The `loadingString` prop specifies a string to return when using the
+`useTranslate` hook while the translations are still loading.
 
 #### `locale`
 
