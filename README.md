@@ -170,13 +170,6 @@ The `LoadingComponent` prop specifies a component to render when using the
 
 By default, this component is three animating dots.
 
-#### `loadingString`
-
-Type: `string` _optional_
-
-The `loadingString` prop specifies a string to return when using the
-`useTranslate` hook while the translations are still loading.
-
 #### `locale`
 
 Type: _keyof `translations`_ (required)
