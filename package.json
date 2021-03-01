@@ -1,6 +1,6 @@
 {
   "name": "lazy-i18n",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "author": "Charles Stover <lazy-i18n@charlesstover.com>",
   "description": "Lazy loads translations for React apps",
   "homepage": "https://www.npmjs.com/package/lazy-i18n",

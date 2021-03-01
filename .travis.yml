@@ -3,6 +3,8 @@ node_js: 14
 branches:
   only: master
 install:
+  - rm -rf ./.yarn/cache/
+  - rm -rf ./.yarn/sdks/
   - yarn
 script:
   - yarn build
