@@ -18,7 +18,11 @@
 
 .root {
   animation-duration: 1s;
-  animation-name: loading-dot;
   animation-timing-function: ease-in-out;
   position: relative;
+
+  // https://stackoverflow.com/questions/57634370/
+  & :local {
+    animation-name: loading-dot;
+  }
 }
