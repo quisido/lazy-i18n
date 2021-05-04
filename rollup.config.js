@@ -34,13 +34,17 @@ export default [
     input: 'src/index.ts',
     output: [
       {
+        chunkFileNames: '[name]-[hash].cjs',
         dir: MAIN_DIR,
-        exports: 'auto',
+        entryFileNames: '[name].cjs',
+        exports: 'named',
         format: 'cjs',
         sourcemap: IS_DEV,
       },
       {
+        chunkFileNames: '[name]-[hash].mjs',
         dir: MODULE_DIR,
+        entryFileNames: '[name].mjs',
         format: 'es',
         sourcemap: IS_DEV,
       },
