@@ -1,6 +1,6 @@
 {
   "name": "lazy-i18n",
-  "version": "2.0.6",
+  "version": "2.0.7",
   "author": "Charles Stover <lazy-i18n@charlesstover.com>",
   "description": "Lazy loads translations for React apps",
   "homepage": "https://www.npmjs.com/package/lazy-i18n",
@@ -16,6 +16,10 @@
   },
   "directories": {
     "lib": "src"
+  },
+  "exports": {
+    "import": "./dist/esm/index.mjs",
+    "require": "./dist/cjs/index.cjs"
   },
   "files": [
     "dist",
