@@ -1,14 +1,14 @@
 {
   "name": "lazy-i18n",
-  "version": "2.0.8",
+  "version": "2.0.9",
   "author": "Charles Stover <lazy-i18n@charlesstover.com>",
   "description": "Lazy loads translations for React apps",
   "homepage": "https://www.npmjs.com/package/lazy-i18n",
   "license": "MIT",
   "main": "./dist/cjs/index.cjs",
-  "module": "./dist/esm/index.mjs",
+  "module": "./dist/esm/index.js",
   "repository": "github:CharlesStover/lazy-i18n",
-  "type": "commonjs",
+  "type": "module",
   "types": "./types/index.d.ts",
   "bugs": {
     "email": "lazy-i18n@charlesstover.com",
@@ -18,7 +18,7 @@
     "lib": "src"
   },
   "exports": {
-    "import": "./dist/esm/index.mjs",
+    "import": "./dist/esm/index.js",
     "require": "./dist/cjs/index.cjs"
   },
   "files": [
@@ -32,7 +32,7 @@
   "publishConfig": {
     "access": "public",
     "main": "./dist/cjs/index.cjs",
-    "module": "./dist/esm/index.mjs"
+    "module": "./dist/esm/index.js"
   },
   "scripts": {
     "build": "rollup --config",
