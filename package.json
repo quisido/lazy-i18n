@@ -36,9 +36,9 @@
     "module": "./dist/esm/index.js"
   },
   "scripts": {
-    "build": "rollup --config",
     "eslint": "eslint",
     "jest": "jest --runInBand",
+    "rollup": "rollup --config",
     "start": "rollup --config --watch",
     "test": "eslint && jest --runInBand",
     "test-watch": "jest --coverage=false --runInBand --watch",
@@ -64,7 +64,7 @@
     "eslint-plugin-react": "^7.22.0",
     "eslint-plugin-react-hooks": "^4.2.0",
     "jest": "^26.6.3",
-    "node-sass": "^5.0.0",
+    "node-sass": "^7.0.1",
     "postcss": "^8.2.6",
     "prettier": "^2.2.1",
     "react": "^17.0.1",
